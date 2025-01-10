@@ -42,5 +42,5 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY_CONTENTS }}
 
       # Optional: Check the output of the publish command (optional for debugging)
-      - name: Check Gradle output
-        run: tail -n 20 build.gradle
+      # - name: Check Gradle output
+      #   run: tail -n 20 build.gradle
