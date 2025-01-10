@@ -1,36 +1,24 @@
-name: Publish Artifacts
-
-on: workflow_dispatch
-
-permissions:
-  contents: read
-
-env:
-  ORG_GRADLE_PROJECT_mavenCentralUsername: '${{ secrets.MAVEN_CENTRAL_USERNAME }}'
-  ORG_GRADLE_PROJECT_mavenCentralPassword: '${{ secrets.MAVEN_CENTRAL_PASSWORD }}'
-  ORG_GRADLE_PROJECT_signingInMemoryKeyId: '${{ secrets.SIGNING_KEY_ID }}'
-  ORG_GRADLE_PROJECT_signingInMemoryKey: '${{ secrets.GPG_KEY_CONTENTS }}'
-  ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: '${{ secrets.SIGNING_PASSWORD }}'
-
+name: Publish New
+on:
+  release:
+    types: [released, prereleased]
 jobs:
-  build:
-    uses: ./.github/workflows/gradle.yml
-  deploy:
-    needs: build
-    runs-on: macos-latest
+  publish:
+    name: Release build and publish
+    runs-on: macOS-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
-      - uses: actions/cache@v3
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
-          path: |
-            ~/.konan
-          key: ${{ runner.os }}-${{ hashFiles('**/.lock') }}
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Publish to Maven Central
-        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+          distribution: 'zulu'
+          java-version: 21
+      - name: Publish to MavenCentral
+        run: ./gradlew publishToMavenCentral --no-configuration-cache
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY_CONTENTS }}
